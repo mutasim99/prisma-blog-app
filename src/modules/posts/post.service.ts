@@ -1,4 +1,5 @@
-import { Post } from "../../../generated/prisma/client";
+import { Post, postStatus } from "../../../generated/prisma/client";
+import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
 
@@ -13,43 +14,81 @@ const createPost = async (data: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'a
     return result;
 };
 
-const getAllPost = async (payload: { search?: string, tags?: string[] }) => {
-    const result = await prisma.post.findMany({
-        where: payload.search ? {
-            AND: [
+
+const getAllPOst = async ({
+    search,
+    tags,
+    isFeatured,
+    status,
+    authorId
+}: {
+    search: string | undefined,
+    tags: string[] | [],
+    isFeatured: boolean | undefined,
+    status: postStatus | undefined,
+    authorId: string | undefined
+}) => {
+    const andCondition: PostWhereInput[] = []
+
+    if (search) {
+        andCondition.push({
+            OR: [
                 {
-                    OR: [
-                        {
-                            title: {
-                                contains: payload.search as string,
-                                mode: "insensitive"
-                            }
-                        },
-                        {
-                            content: {
-                                contains: payload.search as string,
-                                mode: "insensitive"
-                            }
-                        },
-                        {
-                            tags: {
-                                has: payload.search as string
-                            }
-                        }
-                    ]
+                    title: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    content: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
                 },
                 {
                     tags: {
-                        hasEvery: payload.tags as string[]
+                        has: search
                     }
                 }
             ]
-        } : {}
-    });
-    return result;
+        })
+    };
+
+    if (tags.length > 0) {
+        andCondition.push({
+            tags: {
+                hasEvery: tags as string[]
+            }
+        })
+    };
+
+    if (status) {
+        andCondition.push({
+            status
+        })
+    }
+
+    if (typeof isFeatured === 'boolean') {
+        andCondition.push({
+            isFeatured
+        })
+    };
+
+    if (authorId) {
+        andCondition.push({
+            authorId
+        })
+    }
+
+    const allPost = await prisma.post.findMany({
+        where: {
+            AND: andCondition
+        }
+    })
+    return allPost;
 }
 
 export const postServices = {
     createPost,
-    getAllPost
+    getAllPOst
 }
