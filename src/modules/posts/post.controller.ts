@@ -48,9 +48,9 @@ const getAllPost: RequestHandler = async (req, res) => {
         const authorId = req.query.authorId as string | undefined
 
         /* pagination and sorting */
-        const { limit, skip, sortBy, sortOrder } = paginationSortingHelper(req.query);
+        const { limit, skip, page, sortBy, sortOrder } = paginationSortingHelper(req.query);
 
-        const result = await postServices.getAllPOst({ search: searchString, tags, isFeatured, status, authorId, limit, skip, sortBy, sortOrder });
+        const result = await postServices.getAllPOst({ search: searchString, tags, isFeatured, status, authorId, limit, page, skip, sortBy, sortOrder });
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json({
@@ -60,7 +60,28 @@ const getAllPost: RequestHandler = async (req, res) => {
     }
 }
 
+const getPostById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            throw new Error('postId is required')
+        }
+        const result = await postServices.getPostById(id);
+        res.status(200).json({
+            success: true,
+            message: 'post retrieved',
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        })
+    }
+}
+
 export const postController = {
     createPost,
-    getAllPost
+    getAllPost,
+    getPostById
 }

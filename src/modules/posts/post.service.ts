@@ -1,4 +1,3 @@
-import { string } from 'better-auth';
 import { Post, postStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
@@ -24,6 +23,7 @@ const getAllPOst = async ({
     authorId,
     limit,
     skip,
+    page,
     sortBy,
     sortOrder
 }: {
@@ -34,6 +34,7 @@ const getAllPOst = async ({
     authorId: string | undefined,
     limit: number,
     skip: number,
+    page: number,
     sortBy: string | undefined,
     sortOrder: string | undefined
 }) => {
@@ -99,10 +100,45 @@ const getAllPOst = async ({
             [sortBy]: sortOrder
         } : { createdAt: "desc" }
     })
-    return allPost;
+
+    const total = await prisma.post.count({
+        where: {
+            AND: andCondition
+        }
+    })
+
+    return {
+        data: allPost,
+        totalData: total,
+        limit: limit,
+        currentPage: page,
+        totalPage: Math.ceil(total / limit)
+    };
+}
+
+const getPostById = async (postId: string) => {
+    return  await prisma.$transaction(async (tx) => {
+         await tx.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                views: {
+                    increment: 1
+                }
+            }
+        })
+        const postData = await tx.post.findUnique({
+            where: {
+                id: postId
+            }
+        })
+        return postData
+    });
 }
 
 export const postServices = {
     createPost,
-    getAllPOst
+    getAllPOst,
+    getPostById
 }
