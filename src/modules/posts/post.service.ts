@@ -1,3 +1,4 @@
+import { commentStatus } from './../../../generated/prisma/enums';
 import { Post, postStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
@@ -96,6 +97,11 @@ const getAllPOst = async ({
         where: {
             AND: andCondition
         },
+        include: {
+            _count: {
+                select: { Comment: true }
+            }
+        },
         orderBy: sortBy && sortOrder ? {
             [sortBy]: sortOrder
         } : { createdAt: "desc" }
@@ -117,8 +123,8 @@ const getAllPOst = async ({
 }
 
 const getPostById = async (postId: string) => {
-    return  await prisma.$transaction(async (tx) => {
-         await tx.post.update({
+    return await prisma.$transaction(async (tx) => {
+        await tx.post.update({
             where: {
                 id: postId
             },
@@ -131,7 +137,36 @@ const getPostById = async (postId: string) => {
         const postData = await tx.post.findUnique({
             where: {
                 id: postId
-            }
+            },
+            include: {
+                Comment: {
+                    where: {
+                        parent: null
+                    },
+                    orderBy: {
+                        createdAt: "desc"
+                    },
+                    include: {
+                        replies: {
+                            where: {
+                                status: commentStatus.APPROVED
+                            },
+                            include: {
+
+                                replies: {
+                                    where: {
+                                        status: commentStatus.APPROVED
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                _count: {
+                    select: { Comment: true }
+                }
+            },
+
         })
         return postData
     });
