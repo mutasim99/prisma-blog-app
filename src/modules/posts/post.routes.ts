@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response, Router } from 'express'
+import express, { Router } from 'express'
 import { postController } from './post.controller';
 import auth, { UserRole } from '../../middleware/auth.middleware';
 
