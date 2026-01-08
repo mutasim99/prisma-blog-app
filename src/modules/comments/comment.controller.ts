@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { commentServices } from "./comment.service";
 
 
@@ -66,11 +66,30 @@ const deleteComment = async (req: Request, res: Response) => {
             success: true,
             message: "Delete comment successfully",
             data: result
-        })
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Delete comment failed",
+            error: error
+        });
+    };
+};
+
+const updateComment: RequestHandler = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const authorId = req.user;
+        const result = await commentServices.updateComment(commentId as string, req.body, authorId?.id as string);
+        res.status(201).json({
+            success: true,
+            message: "comment update successfully",
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "comment update failed",
             error: error
         })
     }
@@ -80,5 +99,6 @@ export const commentController = {
     createComment,
     getCommentById,
     getCommentByAuthorId,
-    deleteComment
+    deleteComment,
+    updateComment
 }
