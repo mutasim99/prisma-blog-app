@@ -170,7 +170,9 @@ const getPostById = async (postId: string) => {
         })
         return postData
     });
-}
+};
+
+
 
 export const postServices = {
     createPost,
