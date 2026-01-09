@@ -1,5 +1,6 @@
+import { Post } from './../../../generated/prisma/client';
 import { commentStatus } from './../../../generated/prisma/enums';
-import { Post, postStatus } from "../../../generated/prisma/client";
+import { postStatus } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
@@ -185,7 +186,7 @@ const getMyPost = async (authorId: string) => {
         _count: {
             id: true
         },
-        where:{
+        where: {
             authorId
         }
     });
@@ -199,12 +200,40 @@ const getMyPost = async (authorId: string) => {
         }
     });
     return { data: result, total };
-}
+};
+
+const UpdateMyPost = async (postId: string, data: Partial<Post>, authorId: string, isAdmin: Boolean) => {
+    const postData = await prisma.post.findUnique({
+        where: {
+            id: postId
+        },
+        select: {
+            id: true,
+            authorId: true
+        }
+    });
+
+    if (!isAdmin && postData?.authorId !== authorId) {
+        throw new Error('you are not owner/creator of this post')
+    };
+
+    if (!isAdmin) {
+        delete data.isFeatured
+    }
+
+    return await prisma.post.update({
+        where: {
+            id: postId
+        },
+        data
+    });
+};
+
 
 export const postServices = {
     createPost,
     getAllPOst,
     getMyPost,
-    getPostById
-
+    getPostById,
+    UpdateMyPost
 };
