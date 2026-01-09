@@ -77,11 +77,34 @@ const getPostById = async (req: Request, res: Response) => {
             success: false,
             message: 'Internal server error'
         })
-    }
-}
+    };
+};
+const getMyPost = async (req: Request, res: Response) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            throw new Error('User not Found')
+        }
+        const result = await postServices.getMyPost(user.id as string);
+        res.status(200).json({
+            success: true,
+            message: 'post retrieved',
+            data: result
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        })
+    };
+};
+
+
 
 export const postController = {
     createPost,
     getAllPost,
+    getMyPost,
     getPostById
+
 }
