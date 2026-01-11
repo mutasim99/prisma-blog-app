@@ -4,18 +4,20 @@ import auth, { UserRole } from '../../middleware/auth.middleware';
 
 const router = Router();
 
-/* Get route */
+/* Get comment by authorId*/
 router.get("/author/:authorId", commentController.getCommentByAuthorId);
+/* Get a single comment by commentId */
 router.get("/:commentId", commentController.getCommentById);
 
-/* Post route */
+/* Create comments */
 router.post('/', auth(UserRole.USER, UserRole.ADMIN), commentController.createComment);
 
-/* Update Route */
+/* Update comment data */
 router.patch('/:commentId', auth(UserRole.USER, UserRole.ADMIN), commentController.updateComment);
+/* Update comment status */
 router.patch('/:commentId/moderate', auth(UserRole.ADMIN), commentController.moderateComment);
 
-/* Delete Route */
+/* Delete Comment */
 router.delete('/:commentId', auth(UserRole.USER, UserRole.ADMIN), commentController.deleteComment);
 
 export const commentRouter = router; 
