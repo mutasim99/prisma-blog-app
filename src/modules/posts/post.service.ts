@@ -229,11 +229,55 @@ const UpdateMyPost = async (postId: string, data: Partial<Post>, authorId: strin
     });
 };
 
+const deletePost = async (postId: string, authorId: string, isAdmin: boolean) => {
+    const postData = await prisma.post.findUnique({
+        where: {
+            id: postId
+        },
+        select: {
+            id: true,
+            authorId: true
+        }
+    });
+
+    if (!isAdmin && postData?.authorId) {
+        throw new Error('you are not owner of this post')
+    };
+
+    return await prisma.post.delete({
+        where: {
+            id: postId
+        }
+    });
+};
+
+const getStats = async () => {
+    return await prisma.$transaction(async (tx) => {
+        const [totalPost, publishedPost, archivedPost, totalComments, approvedComments] =
+            await Promise.all([
+                await tx.post.count(),
+                await tx.post.count({ where: { status: postStatus.PUBLISHED } }),
+                await tx.post.count({ where: { status: postStatus.ARCHIVED } }),
+                await tx.comment.count(),
+                await tx.comment.count({ where: { status: commentStatus.APPROVED } })
+            ])
+
+        return {
+            totalPost,
+            publishedPost,
+            archivedPost,
+            totalComments,
+            approvedComments
+        }
+    });
+}
 
 export const postServices = {
     createPost,
     getAllPOst,
     getMyPost,
     getPostById,
-    UpdateMyPost
+    UpdateMyPost,
+    getStats,
+    deletePost
 };

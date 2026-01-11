@@ -124,6 +124,44 @@ const updateMyPost: RequestHandler = async (req, res) => {
             message: errorMessage
         })
     }
+};
+
+/* Delete post */
+const deletePost: RequestHandler = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const user = req.user;
+        const isAdmin = user?.role === UserRole.ADMIN
+        const result = await postServices.deletePost(postId as string, user?.id as string, isAdmin);
+        res.status(200).json({
+            success: true,
+            message: "Post delete successfully",
+            data: result
+        })
+    } catch (error) {
+        const errorMessage = (error instanceof Error) ? error.message : "delete failed";
+        res.status(500).json({
+            success: false,
+            message: errorMessage
+        })
+    }
+}
+/* Get stats */
+const getStats: RequestHandler = async (req, res) => {
+    try {
+        const result = await postServices.getStats();
+        res.status(200).json({
+            success: true,
+            message: "stats retrieved successfully",
+            data: result
+        })
+    } catch (error) {
+        const errorMessage = (error instanceof Error) ? error.message : "stats fetched failed";
+        res.status(500).json({
+            success: false,
+            message: errorMessage
+        })
+    }
 }
 
 
@@ -131,6 +169,8 @@ export const postController = {
     createPost,
     getAllPost,
     getMyPost,
+    getStats,
     getPostById,
-    updateMyPost
+    updateMyPost,
+    deletePost
 }
